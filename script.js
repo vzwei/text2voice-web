@@ -88,13 +88,42 @@ function generateVoice(isPreview) {
     const apiUrl = apiConfig[apiName].url;
     const speaker = $('#speaker').val();
     const text = $('#text').val();
-    const previewText = isPreview ? text.substring(0, 20) : text; //试听文本20个字 
-    let url = `${apiUrl}?t=${encodeURIComponent(previewText)}&v=${encodeURIComponent(speaker)}`;
+    const previewText = isPreview ? text.substring(0, 20) : text; // 试听文本20个字
 
-    const rate = $('#rate').val();
-    const pitch = $('#pitch').val();
-    url += `&r=${encodeURIComponent(rate)}&p=${encodeURIComponent(pitch)}&o=audio-24khz-48kbitrate-mono-mp3`;
+    if (apiName === 'voice-api') {
+        // voice-api 请求方法
+        let url = `${apiUrl}?t=${encodeURIComponent(previewText)}&v=${encodeURIComponent(speaker)}`;
+        const rate = $('#rate').val();
+        const pitch = $('#pitch').val();
+        url += `&r=${encodeURIComponent(rate)}&p=${encodeURIComponent(pitch)}&o=audio-24khz-48kbitrate-mono-mp3`;
 
+        makeRequest(url);
+    } else if (apiName === 'lobe-api') {
+        // lobe-api 请求方法
+        const payload = {
+            model: speaker,
+            input: text,
+            voice: `rate:${$('#rate').val()}|pitch:${$('#pitch').val()}`
+        };
+
+        $.ajax({
+            url: apiUrl,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer @SVD'
+            },
+            data: JSON.stringify(payload),
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: handleSuccess,
+            error: handleError
+        });
+    }
+}
+
+function makeRequest(url) {
     $('#loading').show();
     $('#result').hide();
     $('#generateButton').prop('disabled', true);
@@ -104,33 +133,38 @@ function generateVoice(isPreview) {
         url: url,
         method: 'GET',
         headers: {
-            'x-api-key': '@ak47'  // 添加 API 密钥
+            'x-api-key': '@ak47'
         },
         xhrFields: {
-            responseType: 'blob' // 确保返回的是一个Blob对象
+            responseType: 'blob'
         },
-        success: function (blob) {
-            const voiceUrl = URL.createObjectURL(blob);
-            $('#audio').attr('src', voiceUrl);
-            $('#audio')[0].load();  // 确保加载音频文件
-            if (!isPreview) {
-                $('#download').attr('href', voiceUrl);
-                const timestamp = new Date().toLocaleTimeString();  // 获取当前时间
-                const shortenedText = text.length > 5 ? text.substring(0, 5) + '...' : text;  // 截取前5个字
-                addHistoryItem(timestamp, shortenedText, voiceUrl);
-            }
-            $('#result').show();
-            $('#loading').hide();
-            $('#generateButton').prop('disabled', false);
-            $('#previewButton').prop('disabled', false);
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            alert(`请求失败：${textStatus} - ${errorThrown}`);
-            $('#loading').hide();
-            $('#generateButton').prop('disabled', false);
-            $('#previewButton').prop('disabled', false);
-        }
+        success: handleSuccess,
+        error: handleError
     });
+}
+
+function handleSuccess(blob) {
+    const voiceUrl = URL.createObjectURL(blob);
+    $('#audio').attr('src', voiceUrl);
+    $('#audio')[0].load();
+    if (!isPreview) {
+        $('#download').attr('href', voiceUrl);
+        const timestamp = new Date().toLocaleTimeString();
+        const shortenedText = text.length > 5 ? text.substring(0, 5) + '...' : text;
+        addHistoryItem(timestamp, shortenedText, voiceUrl);
+    }
+    $('#result').show();
+    $('#loading').hide();
+    $('#generateButton').prop('disabled', false);
+    $('#previewButton').prop('disabled', false);
+}
+
+function handleError(jqXHR, textStatus, errorThrown) {
+    console.error(`请求失败：${textStatus} - ${errorThrown}`);
+    alert(`请求失败：${textStatus} - ${errorThrown}`);
+    $('#loading').hide();
+    $('#generateButton').prop('disabled', false);
+    $('#previewButton').prop('disabled', false);
 }
 
 function addHistoryItem(timestamp, text, audioURL) {
@@ -150,7 +184,7 @@ function addHistoryItem(timestamp, text, audioURL) {
 function playAudio(audioURL) {
     const audioElement = $('#audio')[0];
     audioElement.src = audioURL;
-    audioElement.load();  // 确保加载音频文件
+    audioElement.load();
     audioElement.play();
 }
 
