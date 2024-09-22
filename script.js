@@ -94,11 +94,15 @@ function generateVoice(isPreview) {
 
         makeRequest(url, isPreview, text);
     } else if (apiName === 'lobe-api') {
-        const url = `${apiUrl}?model=${encodeURIComponent(speaker)}&voice=rate:${encodeURIComponent(rate)}|pitch:${encodeURIComponent(pitch)}&text=${encodeURIComponent(previewText)}`;
-
         $.ajax({
-            url: url,
-            method: 'GET', 
+            url: '/v1/audio/speech',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                model: speaker,
+                input: previewText,
+                voice: `rate:${rate}|pitch:${pitch}`
+            }),
             xhrFields: {
                 responseType: 'blob'
             },
