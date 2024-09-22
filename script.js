@@ -98,7 +98,7 @@ function generateVoice(isPreview) {
 
         $.ajax({
             url: url,
-            method: 'GET',
+            method: 'GET', 
             xhrFields: {
                 responseType: 'blob'
             },

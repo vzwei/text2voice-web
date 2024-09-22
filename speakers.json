@@ -47,7 +47,7 @@
         }
     },
     "lobe-api": {
-        "url": "https://tts-api.deno.dev/v1/audio/speech",
+        "url": "https://tts-api.deno.dev/tts",
         "speakers": {
             "en-US-JohnNeural": "John",
             "en-US-JaneNeural": "Jane",
