@@ -1,22 +1,30 @@
-let apiConfig;
-let lastRequestTime = 0;
+let apiConfig = {
+    "voice-api": {
+        "url": "https://ttsapi.zwei.de.eu.org/tts",
+        "speakers": {
+            "zh-CN-XiaoxiaoNeural": "晓晓",
+            "zh-CN-YunxiNeural": "云希",
+            "zh-TW-YunJheNeural": "云哲 台湾",
+            "zh-TW-HsiaoYuNeural": "晓雨 台湾"
+        }
+    },
+    "lobe-api": {
+        "url": "https://tts-api.deno.dev/v1/audio/speech",
+        "speakers": {
+            "zh-HK-WanLungNeural": "WanLung",
+            "zh-CN-XiaoxiaoNeural": "Xiaoxiao",
+            "zh-CN-XiaoyiNeural": "Xiaoyi",
+            "zh-CN-YunjianNeural": "Yunjian",
+            "zh-CN-YunxiNeural": "Yunxi",
+            "zh-CN-YunxiaNeural": "Yunxia",
+            "zh-CN-YunyangNeural": "Yunyang",
+            "zh-CN-liaoning-XiaobeiNeural": "Xiaobei",
+            "zu-ZA-ThembaNeural": "Themba"
+        }
+    }
+};
 
-function loadSpeakers() {
-    return fetch('speakers.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            apiConfig = data;
-            updateSpeakerOptions('voice-api');
-        })
-        .catch(error => {
-            console.error('Error loading speakers:', error);
-        });
-}
+let lastRequestTime = 0;
 
 function updateSpeakerOptions(apiName) {
     const speakers = apiConfig[apiName].speakers;
@@ -37,36 +45,35 @@ function updateSliderLabel(sliderId, labelId) {
 }
 
 $(document).ready(function () {
-    loadSpeakers().then(() => {
-        $('[data-toggle="tooltip"]').tooltip();
+    updateSpeakerOptions('voice-api');
+    $('[data-toggle="tooltip"]').tooltip();
 
-        $('#api').on('change', function () {
-            updateSpeakerOptions(this.value);
-        });
+    $('#api').on('change', function () {
+        updateSpeakerOptions(this.value);
+    });
 
-        updateSliderLabel('rate', 'rateValue');
-        updateSliderLabel('pitch', 'pitchValue');
+    updateSliderLabel('rate', 'rateValue');
+    updateSliderLabel('pitch', 'pitchValue');
 
-        $('#text').on('input', function () {
-            $('#charCount').text(`字符数统计：${this.value.length}/3600`);
-        });
+    $('#text').on('input', function () {
+        $('#charCount').text(`字符数统计：${this.value.length}/3600`);
+    });
 
-        $('#text2voice-form').on('submit', function (event) {
-            event.preventDefault();
-            if (canMakeRequest()) {
-                generateVoice(false);
-            } else {
-                alert('请稍候再试，每5秒只能请求一次。');
-            }
-        });
+    $('#text2voice-form').on('submit', function (event) {
+        event.preventDefault();
+        if (canMakeRequest()) {
+            generateVoice(false);
+        } else {
+            alert('请稍候再试，每5秒只能请求一次。');
+        }
+    });
 
-        $('#previewButton').on('click', function () {
-            if (canMakeRequest()) {
-                generateVoice(true);
-            } else {
-                alert('请稍候再试，每5秒只能请求一次。');
-            }
-        });
+    $('#previewButton').on('click', function () {
+        if (canMakeRequest()) {
+            generateVoice(true);
+        } else {
+            alert('请稍候再试，每5秒只能请求一次。');
+        }
     });
 });
 
@@ -94,7 +101,7 @@ function generateVoice(isPreview) {
 
         makeRequest(url, isPreview, text);
     } else if (apiName === 'lobe-api') {
-        const url = `/v1/audio/speech?model=${encodeURIComponent(speaker)}&input=${encodeURIComponent(previewText)}&voice=${encodeURIComponent(`rate:${rate}|pitch:${pitch}`)}`;
+        const url = `${apiUrl}?model=${encodeURIComponent(speaker)}&input=${encodeURIComponent(previewText)}&voice=${encodeURIComponent(`rate:${rate}|pitch:${pitch}`)}`;
         
         $.ajax({
             url: url,
