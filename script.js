@@ -93,18 +93,19 @@ function generateVoice(isPreview) {
         url += `&r=${encodeURIComponent(rate)}&p=${encodeURIComponent(pitch)}&o=audio-24khz-48kbitrate-mono-mp3`;
 
         makeRequest(url, isPreview, text);
-    } else if (apiName === 'lobe-api') {
+    }   else if (apiName === 'lobe-api') {
         const payload = {
             model: speaker,
-            input: text,
-            voice: `pitch:${$('#pitch').val()}|rate:${$('#rate').val()}`
+            input: previewText, // 使用 previewText 而不是 text
+            voice: `rate:${$('#rate').val()}|pitch:${$('#pitch').val()}`
         };
 
         $.ajax({
-            url: 'https://itts.pages.dev/v1/audio/speech',
+            url: apiUrl,
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer @SVD' // 使用你设置的 AUTH_TOKEN
             },
             data: JSON.stringify(payload),
             xhrFields: {
@@ -112,7 +113,7 @@ function generateVoice(isPreview) {
             },
             success: (blob) => {
                 console.log('成功接收到响应');
-                handleSuccess(blob, isPreview, text);
+                handleSuccess(blob, isPreview, text); // 注意这里仍然使用 text 变量
             },
             error: (jqXHR, textStatus, errorThrown) => {
                 console.error(`请求失败：${textStatus} - ${errorThrown}`);
