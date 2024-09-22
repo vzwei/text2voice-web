@@ -103,7 +103,7 @@ function generateVoice(isPreview) {
                 responseType: 'blob'
             },
             success: (blob) => {
-                console.log('成功接收到响应');
+                console.log('Blob type:', blob.type);
                 handleSuccess(blob, isPreview, text);
             },
             error: (jqXHR, textStatus, errorThrown) => {
@@ -136,6 +136,11 @@ function makeRequest(url, isPreview, text) {
 }
 
 function handleSuccess(blob, isPreview, text) {
+    if (!(blob instanceof Blob)) {
+        console.error('Response is not a Blob');
+        return;
+    }
+    
     const voiceUrl = URL.createObjectURL(blob);
     $('#audio').attr('src', voiceUrl);
     $('#audio')[0].load();
