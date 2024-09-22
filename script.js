@@ -97,7 +97,7 @@ function generateVoice(isPreview) {
         const pitch = $('#pitch').val();
         url += `&r=${encodeURIComponent(rate)}&p=${encodeURIComponent(pitch)}&o=audio-24khz-48kbitrate-mono-mp3`;
 
-        makeRequest(url);
+        makeRequest(url, isPreview, text);
     } else if (apiName === 'lobe-api') {
         // lobe-api 请求方法
         const payload = {
@@ -117,13 +117,13 @@ function generateVoice(isPreview) {
             xhrFields: {
                 responseType: 'blob'
             },
-            success: handleSuccess,
+            success: (blob) => handleSuccess(blob, isPreview, text),
             error: handleError
         });
     }
 }
 
-function makeRequest(url) {
+function makeRequest(url, isPreview, text) {
     $('#loading').show();
     $('#result').hide();
     $('#generateButton').prop('disabled', true);
@@ -138,12 +138,12 @@ function makeRequest(url) {
         xhrFields: {
             responseType: 'blob'
         },
-        success: handleSuccess,
+        success: (blob) => handleSuccess(blob, isPreview, text),
         error: handleError
     });
 }
 
-function handleSuccess(blob) {
+function handleSuccess(blob, isPreview, text) {
     const voiceUrl = URL.createObjectURL(blob);
     $('#audio').attr('src', voiceUrl);
     $('#audio')[0].load();
