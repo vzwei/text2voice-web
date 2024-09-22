@@ -85,28 +85,20 @@ function generateVoice(isPreview) {
     const speaker = $('#speaker').val();
     const text = $('#text').val();
     const previewText = isPreview ? text.substring(0, 20) : text;
+    const rate = $('#rate').val();
+    const pitch = $('#pitch').val();
 
     if (apiName === 'voice-api') {
         let url = `${apiUrl}?t=${encodeURIComponent(previewText)}&v=${encodeURIComponent(speaker)}`;
-        const rate = $('#rate').val();
-        const pitch = $('#pitch').val();
         url += `&r=${encodeURIComponent(rate)}&p=${encodeURIComponent(pitch)}&o=audio-24khz-48kbitrate-mono-mp3`;
 
         makeRequest(url, isPreview, text);
     } else if (apiName === 'lobe-api') {
-        const payload = {
-            model: speaker,
-            input: previewText,
-            voice: `rate:${$('#rate').val()}|pitch:${$('#pitch').val()}`
-        };
+        const url = `${apiUrl}?model=${encodeURIComponent(speaker)}&voice=rate:${encodeURIComponent(rate)}|pitch:${encodeURIComponent(pitch)}&text=${encodeURIComponent(previewText)}`;
 
         $.ajax({
-            url: apiUrl,
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: JSON.stringify(payload),
+            url: url,
+            method: 'GET',
             xhrFields: {
                 responseType: 'blob'
             },
