@@ -1,72 +1,13 @@
-const apiConfig = {
-    "voice-api": {
-        url: "https://ttsapi.zwei.de.eu.org/tts",
-        speakers: {
-            "zh-CN-XiaoxiaoNeural": "晓晓",
-            "zh-CN-YunxiNeural": "云希",
-            "zh-CN-YunjianNeural": "云健",
-            "zh-CN-XiaoyiNeural": "晓伊",
-            "zh-CN-YunyangNeural": "云扬",
-            "zh-CN-XiaochenNeural": "晓辰",
-            "zh-CN-XiaochenMultilingualNeural": "晓辰 多语言",
-            "zh-CN-XiaohanNeural": "晓涵",
-            "zh-CN-XiaomengNeural": "晓梦",
-            "zh-CN-XiaomoNeural": "晓墨",
-            "zh-CN-XiaoqiuNeural": "晓秋",
-            "zh-CN-XiaorouNeural": "晓柔",
-            "zh-CN-XiaoruiNeural": "晓睿",
-            "zh-CN-XiaoshuangNeural": "晓双",
-            "zh-CN-XiaoxiaoDialectsNeural": "晓晓 方言",
-            "zh-CN-XiaoxiaoMultilingualNeural": "晓晓 多语言",
-            "zh-CN-XiaoyanNeural": "晓颜",
-            "zh-CN-XiaoyouNeural": "晓悠",
-            "zh-CN-XiaoyuMultilingualNeural": "晓宇 多语言",
-            "zh-CN-XiaozhenNeural": "晓甄",
-            "zh-CN-YunfengNeural": "云枫",
-            "zh-CN-YunhaoNeural": "云皓",
-            "zh-CN-YunjieNeural": "云杰",
-            "zh-CN-YunxiaNeural": "云夏",
-            "zh-CN-YunyeNeural": "云野",
-            "zh-CN-YunyiMultilingualNeural": "云逸 多语言",
-            "zh-CN-YunzeNeural": "云泽",
-            "zh-CN-YunfanMultilingualNeural": "云帆 多语言",
-            "zh-CN-YunxiaoMultilingualNeural": "云萧 多语言",
-            "zh-CN-guangxi-YunqiNeural": "云奇 广西",
-            "zh-CN-henan-YundengNeural": "云登 河南",
-            "zh-CN-liaoning-XiaobeiNeural": "晓北 辽宁",
-            "zh-CN-liaoning-YunbiaoNeural": "云彪 辽宁",
-            "zh-CN-shaanxi-XiaoniNeural": "晓妮 山西",
-            "zh-CN-shandong-YunxiangNeural": "云翔 山东",
-            "zh-CN-sichuan-YunxiNeural": "云希 四川",
-            "zh-HK-HiuMaanNeural": "晓曼 粤语",
-            "zh-HK-WanLungNeural": "云龙 粤语",
-            "zh-HK-HiuGaaiNeural": "晓佳 粤语",
-            "zh-TW-HsiaoChenNeural": "晓臻 台湾",
-            "zh-TW-YunJheNeural": "云哲 台湾",
-            "zh-TW-HsiaoYuNeural": "晓雨 台湾"
-        }
-    },
-    "lobe-api": {
-        url: "https://tts-api.deno.dev/v1/audio/speech",
-        authToken: "@SVD",
-        speakers: {}  // 将在初始化时填充
-    }
-};
+let apiConfig;
+let lastRequestTime = 0;
 
-async function fetchLobeVoices() {
-    const response = await fetch("https://tts-api.deno.dev/voices", {
-        headers: { "Authorization": `Bearer ${apiConfig["lobe-api"].authToken}` }
-    });
-    const voices = await response.json();
-    apiConfig["lobe-api"].speakers = voices.reduce((acc, voice) => {
-        acc[voice.model] = voice.friendlyName;
-        return acc;
-    }, {});
-}
-
-async function initialize() {
-    await fetchLobeVoices();
-    updateSpeakerOptions('voice-api');
+function loadSpeakers() {
+    return fetch('speakers.json')
+        .then(response => response.json())
+        .then(data => {
+            apiConfig = data;
+            updateSpeakerOptions('voice-api');
+        });
 }
 
 function updateSpeakerOptions(apiName) {
@@ -88,44 +29,42 @@ function updateSliderLabel(sliderId, labelId) {
 }
 
 $(document).ready(function () {
-    initialize();
+    loadSpeakers().then(() => {
+        // 启用工具提示
+        $('[data-toggle="tooltip"]').tooltip();
 
-    // 启用工具提示
-    $('[data-toggle="tooltip"]').tooltip();
-    
-    // 更新所选 API 的讲述人选项
-    $('#api').on('change', function () {
-        updateSpeakerOptions(this.value);
-    });
+        // 更新所选 API 的讲述人选项
+        $('#api').on('change', function () {
+            updateSpeakerOptions(this.value);
+        });
 
-    // 初始化语速和语调滑块
-    updateSliderLabel('rate', 'rateValue');
-    updateSliderLabel('pitch', 'pitchValue');
+        // 初始化语速和语调滑块
+        updateSliderLabel('rate', 'rateValue');
+        updateSliderLabel('pitch', 'pitchValue');
 
-    // 字符计数器
-    $('#text').on('input', function () {
-        $('#charCount').text(`字符数统计：${this.value.length}/3600`);
-    });
+        // 字符计数器
+        $('#text').on('input', function () {
+            $('#charCount').text(`字符数统计：${this.value.length}/3600`);
+        });
 
-    $('#text2voice-form').on('submit', function (event) {
-        event.preventDefault();
-        if (canMakeRequest()) {
-            generateVoice(false);
-        } else {
-            alert('请稍候再试，每5秒只能请求一次。');
-        }
-    });
+        $('#text2voice-form').on('submit', function (event) {
+            event.preventDefault();
+            if (canMakeRequest()) {
+                generateVoice(false);
+            } else {
+                alert('请稍候再试，每5秒只能请求一次。');
+            }
+        });
 
-    $('#previewButton').on('click', function () {
-        if (canMakeRequest()) {
-            generateVoice(true);
-        } else {
-            alert('请稍候再试，每5秒只能请求一次。');
-        }
+        $('#previewButton').on('click', function () {
+            if (canMakeRequest()) {
+                generateVoice(true);
+            } else {
+                alert('请稍候再试，每5秒只能请求一次。');
+            }
+        });
     });
 });
-
-let lastRequestTime = 0;
 
 function canMakeRequest() {
     const currentTime = Date.now();
@@ -153,12 +92,12 @@ function generateVoice(isPreview) {
     $('#generateButton').prop('disabled', true);
     $('#previewButton').prop('disabled', true);
 
-    const headers = apiName === "lobe-api" ? { 'Authorization': `Bearer ${apiConfig["lobe-api"].authToken}` } : {};
-
     $.ajax({
         url: url,
         method: 'GET',
-        headers: headers,
+        headers: {
+            'x-api-key': '@ak47'  // 添加 API 密钥
+        },
         xhrFields: {
             responseType: 'blob' // 确保返回的是一个Blob对象
         },
