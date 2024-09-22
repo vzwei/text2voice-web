@@ -38,19 +38,15 @@ function updateSliderLabel(sliderId, labelId) {
 
 $(document).ready(function () {
     loadSpeakers().then(() => {
-        // 启用工具提示
         $('[data-toggle="tooltip"]').tooltip();
 
-        // 更新所选 API 的讲述人选项
         $('#api').on('change', function () {
             updateSpeakerOptions(this.value);
         });
 
-        // 初始化语速和语调滑块
         updateSliderLabel('rate', 'rateValue');
         updateSliderLabel('pitch', 'pitchValue');
 
-        // 字符计数器
         $('#text').on('input', function () {
             $('#charCount').text(`字符数统计：${this.value.length}/3600`);
         });
@@ -88,10 +84,9 @@ function generateVoice(isPreview) {
     const apiUrl = apiConfig[apiName].url;
     const speaker = $('#speaker').val();
     const text = $('#text').val();
-    const previewText = isPreview ? text.substring(0, 20) : text; // 试听文本20个字
+    const previewText = isPreview ? text.substring(0, 20) : text;
 
     if (apiName === 'voice-api') {
-        // voice-api 请求方法
         let url = `${apiUrl}?t=${encodeURIComponent(previewText)}&v=${encodeURIComponent(speaker)}`;
         const rate = $('#rate').val();
         const pitch = $('#pitch').val();
@@ -99,7 +94,6 @@ function generateVoice(isPreview) {
 
         makeRequest(url, isPreview, text);
     } else if (apiName === 'lobe-api') {
-        // lobe-api 请求方法
         const payload = {
             model: speaker,
             input: text,
@@ -117,8 +111,15 @@ function generateVoice(isPreview) {
             xhrFields: {
                 responseType: 'blob'
             },
-            success: (blob) => handleSuccess(blob, isPreview, text),
-            error: handleError
+            success: (blob) => {
+                console.log('成功接收到响应');
+                handleSuccess(blob, isPreview, text);
+            },
+            error: (jqXHR, textStatus, errorThrown) => {
+                console.error(`请求失败：${textStatus} - ${errorThrown}`);
+                console.error(`响应内容：${jqXHR.responseText}`);
+                alert(`请求失败：${textStatus} - ${errorThrown}`);
+            }
         });
     }
 }
