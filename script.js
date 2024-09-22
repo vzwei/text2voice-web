@@ -136,6 +136,16 @@ function makeRequest(url, isPreview, text) {
 }
 
 function handleSuccess(blob, isPreview, text) {
+    console.log('Blob type:', blob.type); // 添加调试信息
+    if (blob.type !== "audio/mpeg") {
+        console.error('Invalid Blob type:', blob.type);
+        alert('请求失败：无效的音频格式');
+        $('#loading').hide();
+        $('#generateButton').prop('disabled', false);
+        $('#previewButton').prop('disabled', false);
+        return;
+    }
+
     const voiceUrl = URL.createObjectURL(blob);
     $('#audio').attr('src', voiceUrl);
     $('#audio')[0].load();
