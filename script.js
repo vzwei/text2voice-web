@@ -46,20 +46,19 @@ const apiConfig = {
             "zh-TW-HsiaoYuNeural": "晓雨 台湾"
         }
     },
-    "lobe-tts": {
+    "lobe-api": {
         url: "https://tts-api.deno.dev/v1/audio/speech",
         authToken: "@SVD",
-        getVoicesUrl: "https://tts-api.deno.dev/voices",
         speakers: {}  // 将在初始化时填充
     }
 };
 
 async function fetchLobeVoices() {
-    const response = await fetch(apiConfig["lobe-tts"].getVoicesUrl, {
-        headers: { "Authorization": `Bearer ${apiConfig["lobe-tts"].authToken}` }
+    const response = await fetch("https://tts-api.deno.dev/voices", {
+        headers: { "Authorization": `Bearer ${apiConfig["lobe-api"].authToken}` }
     });
     const voices = await response.json();
-    apiConfig["lobe-tts"].speakers = voices.reduce((acc, voice) => {
+    apiConfig["lobe-api"].speakers = voices.reduce((acc, voice) => {
         acc[voice.model] = voice.friendlyName;
         return acc;
     }, {});
@@ -154,7 +153,7 @@ function generateVoice(isPreview) {
     $('#generateButton').prop('disabled', true);
     $('#previewButton').prop('disabled', true);
 
-    const headers = apiName === "lobe-tts" ? { 'Authorization': `Bearer ${apiConfig["lobe-tts"].authToken}` } : {};
+    const headers = apiName === "lobe-api" ? { 'Authorization': `Bearer ${apiConfig["lobe-api"].authToken}` } : {};
 
     $.ajax({
         url: url,
