@@ -97,15 +97,14 @@ function generateVoice(isPreview) {
         const payload = {
             model: speaker,
             input: text,
-            voice: `rate:${$('#rate').val()}|pitch:${$('#pitch').val()}`
+            voice: `pitch:${$('#pitch').val()}|rate:${$('#rate').val()}`
         };
 
         $.ajax({
-            url: apiUrl,
+            url: 'https://itts.pages.dev/v1/audio/speech',
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer @SVD'
+                'Content-Type': 'application/json'
             },
             data: JSON.stringify(payload),
             xhrFields: {
